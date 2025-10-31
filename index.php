@@ -31,37 +31,104 @@ $path = trim($path, '/');
 // Remove query parameters
 $path = explode('?', $path)[0];
 
-// Basic routing logic
-switch ($path) {
+// Enhanced routing logic
+$pathParts = explode('/', $path);
+$controller = $pathParts[0] ?? '';
+$action = $pathParts[1] ?? 'index';
+
+switch ($controller) {
     case '':
     case 'dashboard':
         require_once 'src/Controllers/DashboardController.php';
-        $controller = new DashboardController();
-        $controller->index();
+        $controllerObj = new DashboardController();
+        if ($action === 'analytics') {
+            $controllerObj->analytics();
+        } else {
+            $controllerObj->index();
+        }
         break;
         
     case 'login':
         require_once 'src/Controllers/AuthController.php';
-        $controller = new AuthController();
-        $controller->login();
+        $controllerObj = new AuthController();
+        $controllerObj->login();
         break;
         
     case 'logout':
         require_once 'src/Controllers/AuthController.php';
-        $controller = new AuthController();
-        $controller->logout();
+        $controllerObj = new AuthController();
+        $controllerObj->logout();
+        break;
+        
+    case 'register':
+        require_once 'src/Controllers/AuthController.php';
+        $controllerObj = new AuthController();
+        $controllerObj->register();
+        break;
+        
+    case 'reset-password':
+        require_once 'src/Controllers/AuthController.php';
+        $controllerObj = new AuthController();
+        $controllerObj->resetPassword();
         break;
         
     case 'beneficiaries':
         require_once 'src/Controllers/BeneficiaryController.php';
-        $controller = new BeneficiaryController();
-        $controller->index();
+        $controllerObj = new BeneficiaryController();
+        switch ($action) {
+            case 'create':
+                $controllerObj->create();
+                break;
+            case 'edit':
+                $controllerObj->edit();
+                break;
+            case 'view':
+                $controllerObj->view();
+                break;
+            case 'delete':
+                $controllerObj->delete();
+                break;
+            case 'export':
+                $controllerObj->export();
+                break;
+            default:
+                $controllerObj->index();
+                break;
+        }
         break;
         
     case 'import':
         require_once 'src/Controllers/ImportController.php';
-        $controller = new ImportController();
-        $controller->index();
+        $controllerObj = new ImportController();
+        switch ($action) {
+            case 'upload':
+                $controllerObj->upload();
+                break;
+            case 'preview':
+                $controllerObj->preview();
+                break;
+            case 'execute':
+                $controllerObj->execute();
+                break;
+            case 'results':
+                $controllerObj->results();
+                break;
+            case 'errors':
+                $controllerObj->errors();
+                break;
+            case 'template':
+                $controllerObj->downloadTemplate();
+                break;
+            case 'status':
+                $controllerObj->status();
+                break;
+            case 'cancel':
+                $controllerObj->cancel();
+                break;
+            default:
+                $controllerObj->index();
+                break;
+        }
         break;
         
     default:
