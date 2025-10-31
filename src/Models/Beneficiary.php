@@ -135,6 +135,13 @@ class Beneficiary {
     }
     
     /**
+     * Get count of beneficiaries with filters (alias for getTotalCount)
+     */
+    public function getCount($filters = []) {
+        return $this->getTotalCount($filters);
+    }
+    
+    /**
      * Get total count with filters
      */
     public function getTotalCount($filters = []) {
@@ -217,11 +224,70 @@ class Beneficiary {
     }
     
     /**
+     * Get all beneficiaries for export (no pagination)
+     */
+    public function getAllForExport($filters = []) {
+        $whereConditions = [];
+        $params = [];
+        
+        // Apply same filters as getAll method
+        if (!empty($filters['state'])) {
+            $whereConditions[] = "State = :state";
+            $params['state'] = $filters['state'];
+        }
+        
+        if (!empty($filters['lga'])) {
+            $whereConditions[] = "LGA = :lga";
+            $params['lga'] = $filters['lga'];
+        }
+        
+        if (!empty($filters['ward'])) {
+            $whereConditions[] = "Ward = :ward";
+            $params['ward'] = $filters['ward'];
+        }
+        
+        if (!empty($filters['community'])) {
+            $whereConditions[] = "Community = :community";
+            $params['community'] = $filters['community'];
+        }
+        
+        if (!empty($filters['tranche_status'])) {
+            $whereConditions[] = "TrancheStatus = :tranche_status";
+            $params['tranche_status'] = $filters['tranche_status'];
+        }
+        
+        if (!empty($filters['search'])) {
+            $whereConditions[] = "(nidhh LIKE :search OR HouseHoldNo LIKE :search OR HAddress LIKE :search)";
+            $params['search'] = "%{$filters['search']}%";
+        }
+        
+        if (!empty($filters['date_from'])) {
+            $whereConditions[] = "created_at >= :date_from";
+            $params['date_from'] = $filters['date_from'];
+        }
+        
+        if (!empty($filters['date_to'])) {
+            $whereConditions[] = "created_at <= :date_to";
+            $params['date_to'] = $filters['date_to'] . ' 23:59:59';
+        }
+        
+        $whereClause = '';
+        if (!empty($whereConditions)) {
+            $whereClause = 'WHERE ' . implode(' AND ', $whereConditions);
+        }
+        
+        $sql = "SELECT * FROM beneficiaries {$whereClause} ORDER BY created_at DESC";
+        
+        return $this->db->fetchAll($sql, $params);
+    }
+    
+    /**
      * Get unique values for filters
      */
     public function getUniqueStates() {
         $sql = "SELECT DISTINCT State FROM beneficiaries ORDER BY State";
-        return $this->db->fetchAll($sql);
+        $results = $this->db->fetchAll($sql);
+        return array_column($results, 'State');
     }
     
     public function getUniqueLGAs($state = null) {
@@ -234,7 +300,8 @@ class Beneficiary {
         }
         
         $sql .= " ORDER BY LGA";
-        return $this->db->fetchAll($sql, $params);
+        $results = $this->db->fetchAll($sql, $params);
+        return array_column($results, 'LGA');
     }
     
     public function getUniqueWards($state = null, $lga = null) {
@@ -257,7 +324,8 @@ class Beneficiary {
         }
         
         $sql = "SELECT DISTINCT Ward FROM beneficiaries {$whereClause} ORDER BY Ward";
-        return $this->db->fetchAll($sql, $params);
+        $results = $this->db->fetchAll($sql, $params);
+        return array_column($results, 'Ward');
     }
     
     public function getUniqueCommunities($state = null, $lga = null, $ward = null) {
@@ -285,7 +353,8 @@ class Beneficiary {
         }
         
         $sql = "SELECT DISTINCT Community FROM beneficiaries {$whereClause} ORDER BY Community";
-        return $this->db->fetchAll($sql, $params);
+        $results = $this->db->fetchAll($sql, $params);
+        return array_column($results, 'Community');
     }
     
     /**
